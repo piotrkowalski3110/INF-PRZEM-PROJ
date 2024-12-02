@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 gcc controller.c -o control -lrt -pthread
 gcc temperature.c -o temp -lrt -pthread
 gcc air_humidity.c -o air -lrt -pthread

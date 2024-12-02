@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 char SHM_NAME[] = "garden_shm";
 char SEM_NAME[] = "garden_sem";
@@ -32,8 +34,8 @@ int main(int argc, char *argv[])
     }
 
     shared_data = mmap(NULL, SHM_SIZE,
-                      PROT_READ | PROT_WRITE,
-                      MAP_SHARED, shm_descriptor, 0);
+                       PROT_READ | PROT_WRITE,
+                       MAP_SHARED, shm_descriptor, 0);
 
     if (shared_data == MAP_FAILED)
     {
@@ -50,11 +52,22 @@ int main(int argc, char *argv[])
     while (1)
     {
         float air_humidity;
+        char buffer[10];
+
+        system("clear");
         printf("Podaj wilgotność powietrza w szklarni: ");
-        if (scanf("%f", &air_humidity) != 1)
+
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL)
         {
             printf("Błąd odczytu. Spróbuj ponownie.\n");
-            while (getchar() != '\n');
+            continue;
+        }
+
+        buffer[strcspn(buffer, "\n")] = 0;
+
+        if (sscanf(buffer, "%f", &air_humidity) != 1)
+        {
+            printf("Błąd: wprowadź poprawną liczbę.\n");
             continue;
         }
 
