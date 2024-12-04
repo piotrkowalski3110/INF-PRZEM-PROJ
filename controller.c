@@ -18,11 +18,12 @@ typedef struct
     float air_humidity;
     float soil_moisture;
     float sunlight;
+    volatile int running;
 } garden_data;
 
 void handle_sigint(int sig)
 {
-    printf("\nOperacja niedozwolona\n");
+    // ignore ctrl+c
 }
 
 int main(int argc, char *argv[])
@@ -66,8 +67,9 @@ int main(int argc, char *argv[])
     shared_data->air_humidity = 0;
     shared_data->soil_moisture = 0;
     shared_data->sunlight = 0;
+    shared_data->running = 1;
 
-    while (1)
+    while (shared_data->running)
     {
         sem_wait(semaphore_descriptor);
         garden_local.temperature = shared_data->temperature;

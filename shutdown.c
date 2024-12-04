@@ -22,18 +22,12 @@ typedef struct
     volatile int running;
 } garden_data;
 
-void handle_sigint(int sig)
-{
-    printf("\nCtrl+C zostało zignorowane. Użyj 'q' aby zakończyć program.\n");
-}
-
 int main(int argc, char *argv[])
 {
     int shm_descriptor;
     garden_data *shared_data;
     sem_t *semaphore_descriptor;
     int SHM_SIZE = sizeof(garden_data);
-    signal(SIGINT, handle_sigint);
 
     if ((shm_descriptor = shm_open(SHM_NAME, O_RDWR, 0666)) == -1)
     {
@@ -57,42 +51,14 @@ int main(int argc, char *argv[])
         _exit(-1);
     }
 
-    while (1)
-    {
-        float temperature;
-        char buffer[10];
-
-        printf("Podaj temperaturę powietrza w szklarni: ");
-
-        if (fgets(buffer, sizeof(buffer), stdin) == NULL)
-        {
-            printf("Błąd odczytu.\n");
-            break;
-        }
-
-        buffer[strcspn(buffer, "\n")] = 0;
-
-        if(buffer[0] == 'q' || buffer[0] == 'Q')
-        {
-            printf("Zakonczono program.\n");
-            break;
-        }
-
-        if (sscanf(buffer, "%f", &temperature) != 1)
-        {
-            printf("Niepoprawna liczba.\n");
-            break;
-        }
-
-        sem_wait(semaphore_descriptor);
-        shared_data->temperature = temperature;
-        sem_post(semaphore_descriptor);
-    }
+    sem_wait(semaphore_descriptor);
+    shared_data->running = 0;
+    sem_post(semaphore_descriptor);
 
     munmap(shared_data, SHM_SIZE);
     close(shm_descriptor);
     sem_close(semaphore_descriptor);
 
-    printf("Program zakończony pomyślnie.\n");
+    printf("Sygnał wyłączenia został wysłany\n");
     return 0;
 }

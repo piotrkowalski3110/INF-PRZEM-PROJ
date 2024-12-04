@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 char SHM_NAME[] = "garden_shm";
 char SEM_NAME[] = "garden_sem";
@@ -18,7 +19,13 @@ typedef struct
     float air_humidity;
     float soil_moisture;
     float sunlight;
+    volatile int running;
 } garden_data;
+
+void handle_sigint(int sig)
+{
+    printf("\nCtrl+C zostało zignorowane. Użyj 'q' aby zakończyć program.\n");
+}
 
 int main(int argc, char *argv[])
 {
@@ -26,6 +33,7 @@ int main(int argc, char *argv[])
     garden_data *shared_data;
     sem_t *semaphore_descriptor;
     int SHM_SIZE = sizeof(garden_data);
+    signal(SIGINT, handle_sigint);
 
     if ((shm_descriptor = shm_open(SHM_NAME, O_RDWR, 0666)) == -1)
     {
@@ -54,21 +62,26 @@ int main(int argc, char *argv[])
         float soil_moisture;
         char buffer[10];
 
-        system("clear");
         printf("Podaj wilgotność gleby w szklarni: ");
 
         if (fgets(buffer, sizeof(buffer), stdin) == NULL)
         {
-            printf("Błąd odczytu. Spróbuj ponownie.\n");
-            continue;
+            printf("Błąd odczytu.\n");
+            break;
         }
 
         buffer[strcspn(buffer, "\n")] = 0;
 
+        if (buffer[0] == 'q' || buffer[0] == 'Q')
+        {
+            printf("Zakonczono program.\n");
+            break;
+        }
+
         if (sscanf(buffer, "%f", &soil_moisture) != 1)
         {
-            printf("Błąd: wprowadź poprawną liczbę.\n");
-            continue;
+            printf("Niepoprawna liczba.\n");
+            break;
         }
 
         sem_wait(semaphore_descriptor);
@@ -79,5 +92,7 @@ int main(int argc, char *argv[])
     munmap(shared_data, SHM_SIZE);
     close(shm_descriptor);
     sem_close(semaphore_descriptor);
+
+    printf("Program zakończony pomyślnie.\n");
     return 0;
 }
