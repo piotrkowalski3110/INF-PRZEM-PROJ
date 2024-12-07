@@ -1,0 +1,24 @@
+        // if (garden_previous.garden_devices.heating_mat_state != garden_local.garden_devices.heating_mat_state)
+        // {
+        //     printf("\n>> %s matę grzewczą\n\n", garden_local.garden_devices.heating_mat_state == 1 ? "Włączono" : "Wyłączono");
+        // }
+
+        // if (garden_previous.garden_devices.fan_state != garden_local.garden_devices.fan_state)
+        // {
+        //     printf("\n>> %s wentylator\n\n", garden_local.garden_devices.fan_state == 1 ? "Włączono" : "Wyłączono");
+        // }
+
+        // if (garden_previous.garden_devices.air_humidifier_state != garden_local.garden_devices.air_humidifier_state)
+        // {
+        //     printf("\n>> %s system nawilżania powietrza\n\n", garden_local.garden_devices.air_humidifier_state == 1 ? "Włączono" : "Wyłączono");
+        // }
+
+        // if (garden_previous.garden_devices.irrigator_state != garden_local.garden_devices.irrigator_state)
+        // {
+        //     printf("\n>> %s system nawilżania gleby\n\n", garden_local.garden_devices.irrigator_state == 1 ? "Włączono" : "Wyłączono");
+        // }
+
+        // if (garden_previous.garden_devices.artificial_light_state != garden_local.garden_devices.artificial_light_state)
+        // {
+        //     printf("\n>> %s system sztucznego oświetlenia\n\n", garden_local.garden_devices.artificial_light_state == 1 ? "Włączono" : "Wyłączono");
+        // }

@@ -15,11 +15,30 @@ char SEM_NAME[] = "garden_sem";
 
 typedef struct
 {
-    float temperature;
-    float air_humidity;
-    float soil_moisture;
-    float sunlight;
     volatile int running;
+    struct
+    {
+        float temperature;
+        float air_humidity;
+        float soil_moisture;
+        float sunlight;
+    } sensor_values;
+    struct
+    {
+        int heating_mat_state;
+        int fan_state;
+        int air_humidifier_state;
+        int irrigator_state;
+        int artificial_light_state;
+    } garden_devices;
+    struct
+    {
+        int temperature_led;
+        int air_humidity_led;
+        int soil_moisture_led;
+        int sunlight_led;
+    } led_indicators;
+
 } garden_data;
 
 void handle_sigint(int sig)
@@ -34,6 +53,9 @@ int main(int argc, char *argv[])
     sem_t *semaphore_descriptor;
     int SHM_SIZE = sizeof(garden_data);
     signal(SIGINT, handle_sigint);
+
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
     if ((shm_descriptor = shm_open(SHM_NAME, O_RDWR, 0666)) == -1)
     {
@@ -57,36 +79,47 @@ int main(int argc, char *argv[])
         _exit(-1);
     }
 
+    printf("Podaj wilgotność gleby w szklarni: ");
+
     while (1)
     {
         float soil_moisture;
+        int is_running;
         char buffer[10];
 
-        printf("Podaj wilgotność gleby w szklarni: ");
-
-        if (fgets(buffer, sizeof(buffer), stdin) == NULL)
-        {
-            printf("Błąd odczytu.\n");
-            break;
-        }
-
-        buffer[strcspn(buffer, "\n")] = 0;
-
-        if (buffer[0] == 'q' || buffer[0] == 'Q')
-        {
-            printf("Zakonczono program.\n");
-            break;
-        }
-
-        if (sscanf(buffer, "%f", &soil_moisture) != 1)
-        {
-            printf("Niepoprawna liczba.\n");
-            break;
-        }
-
         sem_wait(semaphore_descriptor);
-        shared_data->soil_moisture = soil_moisture;
+        is_running = shared_data->running;
         sem_post(semaphore_descriptor);
+
+        if (!is_running)
+        {
+            printf("\nOtrzymano sygnał zamknięcia. Kończenie pracy...\n");
+            break;
+        }
+
+        if (fgets(buffer, sizeof(buffer), stdin) != NULL)
+        {
+            buffer[strcspn(buffer, "\n")] = 0;
+
+            if (buffer[0] == 'q' || buffer[0] == 'Q')
+            {
+                printf("\nZakonczono program przez polecenie 'q'.\n");
+                break;
+            }
+
+            if (sscanf(buffer, "%f", &soil_moisture) != 1)
+            {
+                printf("\nPodano niepoprawne dane.\n\n");
+                printf("Podaj wilgotność gleby w szklarni: ");
+                continue;
+            }
+
+            sem_wait(semaphore_descriptor);
+            shared_data->sensor_values.soil_moisture = soil_moisture;
+            sem_post(semaphore_descriptor);
+
+            printf("Podaj wilgotność gleby w szklarni: ");
+        }
     }
 
     munmap(shared_data, SHM_SIZE);

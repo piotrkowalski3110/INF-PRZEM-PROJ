@@ -7,7 +7,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <signal.h>
 
 char SHM_NAME[] = "garden_shm";
@@ -43,19 +42,17 @@ typedef struct
 
 void handle_sigint(int sig)
 {
-    printf("\nCtrl+C zostało zignorowane. Użyj 'q' aby zakończyć program.\n");
+    // ignore ctrl+c
 }
 
 int main(int argc, char *argv[])
 {
     int shm_descriptor;
     garden_data *shared_data;
+    garden_data garden_local;
     sem_t *semaphore_descriptor;
     int SHM_SIZE = sizeof(garden_data);
     signal(SIGINT, handle_sigint);
-
-    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
     if ((shm_descriptor = shm_open(SHM_NAME, O_RDWR, 0666)) == -1)
     {
@@ -79,13 +76,9 @@ int main(int argc, char *argv[])
         _exit(-1);
     }
 
-    printf("Podaj poziom nasłonecznienia w szklarni: ");
-
     while (1)
     {
-        float sunlight;
         int is_running;
-        char buffer[10];
 
         sem_wait(semaphore_descriptor);
         is_running = shared_data->running;
@@ -97,35 +90,30 @@ int main(int argc, char *argv[])
             break;
         }
 
-        if (fgets(buffer, sizeof(buffer), stdin) != NULL)
-        {
-            buffer[strcspn(buffer, "\n")] = 0;
+        sem_wait(semaphore_descriptor);
+        garden_local.garden_devices = shared_data->garden_devices;
+        garden_local.led_indicators = shared_data->led_indicators;
+        sem_post(semaphore_descriptor);
 
-            if (buffer[0] == 'q' || buffer[0] == 'Q')
-            {
-                printf("\nZakonczono program przez polecenie 'q'.\n");
-                break;
-            }
+        printf("--- Urządzenia ---\n");
+        printf("Mata grzewcza: %s\n", garden_local.garden_devices.heating_mat_state ? "Włączona" : "Wyłączona");
+        printf("Wentylator: %s\n", garden_local.garden_devices.fan_state ? "Włączony" : "Wyłączony");
+        printf("Nawilżacz powietrza: %s\n", garden_local.garden_devices.air_humidifier_state ? "Włączony" : "Wyłączony");
+        printf("System nawadniania: %s\n", garden_local.garden_devices.irrigator_state ? "Włączony" : "Wyłączony");
+        printf("Sztuczne oświetlenie: %s\n", garden_local.garden_devices.artificial_light_state ? "Włączone" : "Wyłączone");
 
-            if (sscanf(buffer, "%f", &sunlight) != 1)
-            {
-                printf("\nPodano niepoprawne dane.\n\n");
-                printf("Podaj poziom nasłonecznienia w szklarni: ");
-                continue;
-            }
-
-            sem_wait(semaphore_descriptor);
-            shared_data->sensor_values.sunlight = sunlight;
-            sem_post(semaphore_descriptor);
-
-            printf("Podaj poziom nasłonecznienia w szklarni: ");
-        }
+        printf("\n--- Diody ostrzegawcze ---\n");
+        printf("Temperature LED: %s\n", garden_local.led_indicators.temperature_led == 0 ? "zielona" : garden_local.led_indicators.temperature_led == 1 ? "pomaranczowa" : "czerwona");
+        printf("Humidity LED: %s\n", garden_local.led_indicators.air_humidity_led == 0 ? "zielona" : garden_local.led_indicators.air_humidity_led == 1 ? "pomaranczowa" : "czerwona");
+        printf("Moisture LED: %s\n", garden_local.led_indicators.soil_moisture_led == 0 ? "zielona" : garden_local.led_indicators.soil_moisture_led == 1 ? "pomaranczowa" : "czerwona");
+        printf("Sunlight LED: %s\n", garden_local.led_indicators.sunlight_led == 0 ? "zielona" : garden_local.led_indicators.sunlight_led == 1 ? "pomaranczowa" : "czerwona");
+        printf("\n\n");
+        sleep(1);
     }
 
     munmap(shared_data, SHM_SIZE);
     close(shm_descriptor);
     sem_close(semaphore_descriptor);
-
-    printf("Program zakończony pomyślnie.\n");
+    printf("Poprawnie zakończono działanie programu!\n");
     return 0;
 }

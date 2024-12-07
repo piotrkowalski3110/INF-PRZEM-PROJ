@@ -15,11 +15,30 @@ char SEM_NAME[] = "garden_sem";
 
 typedef struct
 {
-    float temperature;
-    float air_humidity;
-    float soil_moisture;
-    float sunlight;
     volatile int running;
+    struct
+    {
+        float temperature;
+        float air_humidity;
+        float soil_moisture;
+        float sunlight;
+    } sensor_values;
+    struct
+    {
+        int heating_mat_state;
+        int fan_state;
+        int air_humidifier_state;
+        int irrigator_state;
+        int artificial_light_state;
+    } garden_devices;
+    struct
+    {
+        int temperature_led;
+        int air_humidity_led;
+        int soil_moisture_led;
+        int sunlight_led;
+    } led_indicators;
+
 } garden_data;
 
 int main(int argc, char *argv[])

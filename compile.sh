@@ -5,3 +5,4 @@ gcc air_humidity.c -o air -lrt -pthread
 gcc soil_moisture.c -o soil -lrt -pthread
 gcc sunlight.c -o sun -lrt -pthread
 gcc shutdown.c -o shutdown -lrt -pthread
+gcc devices_monitor.c -o devices -lrt -pthread
