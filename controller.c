@@ -74,7 +74,6 @@ int main(int argc, char *argv[])
     int shm_descriptor;
     garden_data *shared_data;
     garden_data garden_local;
-    garden_data garden_previous;
     sem_t *semaphore_descriptor;
     int SHM_SIZE = sizeof(garden_data);
     signal(SIGINT, handle_sigint);
