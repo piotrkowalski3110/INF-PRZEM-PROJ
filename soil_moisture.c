@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <math.h>
+
+#define MIN_SOIL_MOISTURE 0.0f
+#define MAX_SOIL_MOISTURE 100.0f
 
 char SHM_NAME[] = "garden_shm";
 char SEM_NAME[] = "garden_sem";
@@ -114,8 +118,10 @@ int main(int argc, char *argv[])
                 continue;
             }
 
+            float normalized_soil_moisture = fmin(fmax(soil_moisture, MIN_SOIL_MOISTURE), MAX_SOIL_MOISTURE);
+
             sem_wait(semaphore_descriptor);
-            shared_data->sensor_values.soil_moisture = soil_moisture;
+            shared_data->sensor_values.soil_moisture = normalized_soil_moisture;
             sem_post(semaphore_descriptor);
 
             printf("Podaj wilgotność gleby w szklarni: ");

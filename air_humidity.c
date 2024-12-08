@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <math.h>
+
+#define MIN_HUMIDITY 0.0f
+#define MAX_HUMIDITY 100.0f
 
 char SHM_NAME[] = "garden_shm";
 char SEM_NAME[] = "garden_sem";
@@ -114,8 +118,10 @@ int main(int argc, char *argv[])
                 continue;
             }
 
+            float normalized_air_humidity = fmin(fmax(air_humidity, MIN_HUMIDITY), MAX_HUMIDITY);
+
             sem_wait(semaphore_descriptor);
-            shared_data->sensor_values.air_humidity = air_humidity;
+            shared_data->sensor_values.air_humidity = normalized_air_humidity;
             sem_post(semaphore_descriptor);
 
             printf("Podaj wilgotność powietrza w szklarni: ");

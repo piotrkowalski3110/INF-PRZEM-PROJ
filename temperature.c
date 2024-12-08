@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <math.h>
+
+#define MIN_TEMPERATURE -20.0f
+#define MAX_TEMPERATURE 60.0f
 
 char SHM_NAME[] = "garden_shm";
 char SEM_NAME[] = "garden_sem";
@@ -114,8 +118,10 @@ int main(int argc, char *argv[])
                 continue;
             }
 
+            float normalized_temperature = fmin(fmax(temperature, MIN_TEMPERATURE), MAX_TEMPERATURE);
+
             sem_wait(semaphore_descriptor);
-            shared_data->sensor_values.temperature = temperature;
+            shared_data->sensor_values.temperature = normalized_temperature;
             sem_post(semaphore_descriptor);
 
             printf("Podaj temperaturę powietrza w szklarni: ");

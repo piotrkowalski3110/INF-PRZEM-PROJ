@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <math.h>
+
+#define MIN_SUNLIGHT 0.0f
+#define MAX_SUNLIGHT 10000.0f
 
 char SHM_NAME[] = "garden_shm";
 char SEM_NAME[] = "garden_sem";
@@ -114,8 +118,10 @@ int main(int argc, char *argv[])
                 continue;
             }
 
+            float normalized_sunlight = fmin(fmax(sunlight, MIN_SUNLIGHT), MAX_SUNLIGHT);
+
             sem_wait(semaphore_descriptor);
-            shared_data->sensor_values.sunlight = sunlight;
+            shared_data->sensor_values.sunlight = normalized_sunlight;
             sem_post(semaphore_descriptor);
 
             printf("Podaj poziom nasłonecznienia w szklarni: ");
